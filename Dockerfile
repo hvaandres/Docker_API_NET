@@ -1,19 +1,17 @@
-# Get base SDK Image from Microsoft
-FROM mcr.microsoft.com/dotnet/core/sdk:2.2 AS build-env
+# Grab the app package and create a new build
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-env
+# Let's add all the files into the app directory
 WORKDIR /app
 
-#  Copy the project file and restore any dependencies (You can do this via NUGET)
-COPY *.csproj ./
-RUN dotnet restore
-
-# Copy all the project files and build our release
+# Copy everything
 COPY . ./
+# Restore as distinct layers
+RUN dotnet restore
+# Build and publish a release
 RUN dotnet publish -c Release -o out
 
-# Create the RunTime image
-
-FROM mcr.microsoft.com/dotnet/core/aspnet:2.2
+# Build runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:6.0
 WORKDIR /app
-EXPOSE 80
 COPY --from=build-env /app/out .
-ENTRYPOINT [ "dotnet", "DockerAPI.dll" ]
+ENTRYPOINT ["dotnet", "DotNet.Docker.dll"]
